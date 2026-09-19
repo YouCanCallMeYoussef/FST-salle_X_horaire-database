@@ -1,0 +1,463 @@
+<title>Salles FST</title>
+<style>
+:root{
+  --warn:#a3261c; --warn-bg:#fbe3e0;
+  --bg:#f2f4f7; --surface:#ffffff; --surface-2:#e9edf3; --ink:#141922; --muted:#5c6472;
+  --line:#d7dce4; --accent:#2f5d8a; --accent-ink:#ffffff; --free:#2f8a5f; --free-bg:#e5f4ec;
+  --busy:#c4622a; --busy-bg:#fbe9de; --focus:#2f5d8a;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1319; --surface:#171d26; --surface-2:#1f2733; --ink:#e7ebf1; --muted:#8b93a3;
+    --line:#2a3341; --accent:#7fb0e0; --accent-ink:#0f1319; --free:#5fbf8d; --free-bg:#12261c;
+    --busy:#e08a52; --busy-bg:#2b1c13; --focus:#7fb0e0; --warn:#ff8a7a; --warn-bg:#3a1714;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1319; --surface:#171d26; --surface-2:#1f2733; --ink:#e7ebf1; --muted:#8b93a3;
+  --line:#2a3341; --accent:#7fb0e0; --accent-ink:#0f1319; --free:#5fbf8d; --free-bg:#12261c;
+  --busy:#e08a52; --busy-bg:#2b1c13; --focus:#7fb0e0; --warn:#ff8a7a; --warn-bg:#3a1714;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink); margin:0;
+  font-family:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  padding-inline:16px; padding-block:20px 40px;
+}
+.wrap{max-width:1100px;margin:0 auto}
+h1{
+  font-family:'IBM Plex Sans',sans-serif; font-weight:700; font-size:clamp(22px,4vw,30px);
+  margin:0 0 4px; letter-spacing:-0.01em; text-wrap:balance;
+}
+.sub{color:var(--muted); font-size:14px; margin:0 0 18px; max-width:60ch}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.stats{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px}
+.stat{
+  background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  padding:8px 14px; display:flex; flex-direction:column; gap:2px; min-width:96px;
+}
+.stat b{font-size:20px; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums}
+.stat span{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em}
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:18px; overflow-x:auto; scrollbar-width:thin}
+.tabs .tab{flex:none; white-space:nowrap}
+.tab{
+  background:none; border:none; color:var(--muted); font:inherit; font-weight:600; font-size:14px;
+  padding:10px 4px; cursor:pointer; border-bottom:2px solid transparent; margin-right:18px;
+}
+.tab[aria-selected="true"]{color:var(--accent); border-bottom-color:var(--accent)}
+.tab:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.panel{display:none}
+.panel.active{display:block}
+.controls{
+  display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:16px;
+  background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px;
+}
+.field{display:flex; flex-direction:column; gap:5px}
+.field label{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600}
+select, input[type="text"]{
+  font:inherit; font-size:14px; padding:8px 10px; border-radius:8px; border:1px solid var(--line);
+  background:var(--surface-2); color:var(--ink); min-width:150px;
+}
+select:focus-visible, input:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.daybtns{display:flex; gap:6px; flex-wrap:wrap}
+.daybtn{
+  font:inherit; font-size:13px; font-weight:600; padding:8px 12px; border-radius:8px;
+  border:1px solid var(--line); background:var(--surface-2); color:var(--ink); cursor:pointer;
+}
+.daybtn[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.daybtn:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+
+.roomgrid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px;
+}
+.roomcard{
+  border-radius:10px; padding:10px 12px; border:1px solid var(--line); background:var(--surface);
+  display:flex; flex-direction:column; gap:4px; min-height:64px;
+}
+.roomcard.free{background:var(--free-bg); border-color:color-mix(in srgb, var(--free) 40%, var(--line))}
+.roomcard.busy{background:var(--busy-bg); border-color:color-mix(in srgb, var(--busy) 40%, var(--line))}
+.roomname{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13px}
+.roomstatus{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em}
+.roomcard.free .roomstatus{color:var(--free)}
+.roomcard.busy .roomstatus{color:var(--busy)}
+.roomdetail{font-size:11.5px; color:var(--muted); line-height:1.3}
+
+.legend{display:flex; gap:16px; font-size:12px; color:var(--muted); margin:10px 0 4px; flex-wrap:wrap}
+.legend span{display:inline-flex; align-items:center; gap:5px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.dot.free{background:var(--free)}
+.dot.busy{background:var(--busy)}
+
+.weekgrid{
+  display:grid; grid-template-columns: 56px repeat(6,1fr); gap:1px; background:var(--line);
+  border:1px solid var(--line); border-radius:10px; overflow:hidden; font-size:11.5px;
+}
+.wcell{background:var(--surface); padding:2px}
+.wcell.head{
+  background:var(--surface-2); font-weight:700; text-align:center; padding:8px 2px;
+  position:sticky; top:0;
+}
+.wcell.time{background:var(--surface-2); font-family:'IBM Plex Mono',monospace; color:var(--muted); text-align:right; padding:4px 6px; font-size:10.5px}
+.daycol{background:var(--surface); position:relative; min-height:20px}
+.block{
+  border-radius:6px; padding:3px 5px; margin:1px 0; font-size:10.5px; line-height:1.25;
+  background:var(--busy-bg); border-left:3px solid var(--busy); color:var(--ink);
+}
+.block b{display:block; font-size:10.5px}
+.block .rm{font-family:'IBM Plex Mono',monospace; color:var(--muted); font-size:10px}
+.freeline{
+  font-size:10px; color:var(--free); padding:3px 5px; font-weight:600;
+}
+
+.tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:10px}
+table{border-collapse:collapse; width:100%; font-size:12.5px; min-width:760px}
+th,td{padding:7px 9px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap}
+th{background:var(--surface-2); position:sticky; top:0; font-weight:700}
+td.room{font-family:'IBM Plex Mono',monospace}
+tr:hover td{background:var(--surface-2)}
+
+.check{display:flex;align-items:center;gap:7px;font-size:13px;padding:8px 2px;cursor:pointer}
+.check input{accent-color:var(--accent);width:16px;height:16px}
+.nowbtn{font:inherit;font-size:13px;font-weight:600;padding:8px 12px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer}
+.nowbtn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.summary{font-size:14px;margin:4px 0 12px}
+.summary b{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+.bldg{margin:14px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;display:flex;gap:8px;align-items:baseline}
+.bldg span{font-family:'IBM Plex Mono',monospace;font-weight:500}
+.flag{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--warn);background:var(--warn-bg);border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);border-radius:5px;padding:1px 6px;width:fit-content}
+.stat.warn b{color:var(--warn)}
+.conf-intro{font-size:13.5px;color:var(--muted);margin:0 0 14px;max-width:75ch;line-height:1.5}
+td.clash{color:var(--warn);font-weight:600}
+#panel-conf td{white-space:normal;vertical-align:top}
+#panel-conf td:nth-child(4),#panel-conf td:nth-child(5){min-width:260px}
+.note{font-size:12px; color:var(--muted); margin-top:18px; line-height:1.5}
+.empty{color:var(--muted); font-size:13px; padding:20px; text-align:center}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<div class="wrap">
+  <h1>Salles libres &amp; groupes — FST</h1>
+  <p class="sub">Disponibilité des salles et emplois du temps des groupes, à partir des emplois du temps S1 publiés par la faculté (Licence 1–3, Ingénieur, Cycle préparatoire), A.U. 2026-2027. Choisissez un jour et un créneau pour voir les salles libres pendant toute la plage.</p>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" id="tab-rooms" aria-controls="panel-rooms">Disponibilité des salles</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab-groups" aria-controls="panel-groups">Disponibilité des groupes</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab-table" aria-controls="panel-table">Tableau complet</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab-conf" aria-controls="panel-conf">Conflits <span id="conf-count"></span></button>
+  </div>
+
+  <section class="panel active" id="panel-rooms" role="tabpanel" aria-labelledby="tab-rooms">
+    <div class="controls">
+      <div class="field">
+        <label>Jour</label>
+        <div class="daybtns" id="room-daybtns"></div>
+      </div>
+      <div class="field">
+        <label for="room-from">De</label>
+        <select id="room-from"></select>
+      </div>
+      <div class="field">
+        <label for="room-to">À</label>
+        <select id="room-to"></select>
+      </div>
+      <div class="field">
+        <label for="room-bldg">Type / bloc</label>
+        <select id="room-bldg"></select>
+      </div>
+      <div class="field">
+        <label for="room-search">Nom de salle</label>
+        <input type="text" id="room-search" placeholder="ex: NB2, SE1A…">
+      </div>
+      <label class="check"><input type="checkbox" id="room-freeonly" checked> Libres seulement</label>
+      <button class="nowbtn" id="room-now" type="button">Maintenant</button>
+    </div>
+    <p class="summary" id="room-summary"></p>
+    <div class="roomgrid" id="roomgrid"></div>
+  </section>
+
+  <section class="panel" id="panel-groups" role="tabpanel" aria-labelledby="tab-groups">
+    <div class="controls">
+      <div class="field">
+        <label for="cycle-select">Cycle</label>
+        <select id="cycle-select"></select>
+      </div>
+      <div class="field">
+        <label for="group-select">Groupe</label>
+        <select id="group-select" style="min-width:260px"></select>
+      </div>
+    </div>
+    <div class="weekgrid" id="weekgrid"></div>
+  </section>
+
+  <section class="panel" id="panel-table" role="tabpanel" aria-labelledby="tab-table">
+    <div class="controls">
+      <div class="field">
+        <label for="table-search">Recherche (salle, groupe, matière, enseignant)</label>
+        <input type="text" id="table-search" placeholder="Rechercher…" style="min-width:260px">
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Cycle</th><th>Groupe</th><th>Jour</th><th>Horaire</th><th>Salle</th><th>Matière</th><th>Type</th><th>Enseignant</th></tr></thead>
+        <tbody id="tablebody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-conf" role="tabpanel" aria-labelledby="tab-conf">
+    <p class="conf-intro">Salles réservées à deux groupes différents sur des créneaux qui se chevauchent, d'après les emplois du temps publiés. Ne sont pas comptés : les cours partagés (même matière, même enseignant, plusieurs groupes en amphi) et deux séances d'un même groupe au même créneau (matières optionnelles ou semaines alternées). Les salles S.1, S.7 et S.8 du cycle Ingénieur Chimie (ICAI) sont traitées comme des salles distinctes de celles des licences portant le même nom (« Ing. Chimie »). Une même étiquette peut encore désigner deux salles différentes ailleurs : à vérifier auprès de la scolarité.</p>
+    <div class="controls">
+      <div class="field">
+        <label for="conf-day">Jour</label>
+        <select id="conf-day"></select>
+      </div>
+      <div class="field">
+        <label for="conf-search">Salle ou groupe</label>
+        <input type="text" id="conf-search" placeholder="ex: SE2A, MI2…">
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Jour</th><th>Salle</th><th>Chevauchement</th><th>Séance 1</th><th>Séance 2</th></tr></thead>
+        <tbody id="confbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="note">Source : emplois du temps du 1er semestre, A.U. 2026-2027 uniquement (Licence 1, 2, 3, Ingénieur, Cycle préparatoire : BG1-A, BG2, PC1-A, PC2-A/B, MPI1 A–E, MI2 A/B/C, PI2 A/B), publiés par la Faculté des Sciences de Tunis (fst.rnu.tn). __GROUP_COUNT__ groupes, __SESSION_COUNT__ séances, __ROOM_COUNT__ salles identifiées. « Libre » signifie qu'aucune séance de ces emplois du temps n'occupe la salle : examens, réservations et autres départements ne sont pas couverts. Pour le cycle préparatoire, la salle indiquée est celle de la section ; les TP (physique, chimie, biologie, géologie, programmation), qui ont lieu en laboratoire non précisé, ne bloquent pas cette salle.</p>
+</div>
+
+<script>
+const SESSIONS = __SESSIONS_JSON__;
+const DAYS = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+
+function toMin(t){ const [h,m] = t.split(":").map(Number); return h*60+m; }
+function fmtT(t){ return t; }
+
+// normalize rooms: split comma-joined multi-room entries into individual room occupancy records
+const ROOM_SESSIONS = []; // {room, group, day, start, end, subject, teacher, type}
+SESSIONS.forEach(s=>{
+  if(!s.room) return;
+  s.room.split(",").map(r=>r.trim()).filter(Boolean).forEach(r=>{
+    ROOM_SESSIONS.push({room:r, group:s.group, day:s.day, start:s.start, end:s.end, subject:s.subject, teacher:s.teacher, type:s.type});
+  });
+});
+const ROOMS = [...new Set(ROOM_SESSIONS.map(r=>r.room))].sort((a,b)=>a.localeCompare(b));
+const GROUPS = [...new Set(SESSIONS.map(s=>s.group))].sort((a,b)=>a.localeCompare(b));
+
+// ---- Conflicts: same room, same day, overlapping, different sessions (shared lectures excluded) ----
+const normTxt = x => (x||'').toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g,'');
+const CONFLICTS = [];
+(()=>{
+  const by = {};
+  ROOM_SESSIONS.forEach(s=>{ (by[s.room+'|'+s.day] ||= []).push(s); });
+  Object.values(by).forEach(L=>{
+    for(let i=0;i<L.length;i++) for(let j=i+1;j<L.length;j++){
+      const a=L[i], b=L[j];
+      if(!(toMin(a.start)<toMin(b.end) && toMin(b.start)<toMin(a.end))) continue;
+      if(a.group===b.group) continue; // same group: options or alternating weeks, not a room clash
+      const sameSubj = normTxt(a.subject)===normTxt(b.subject);
+      if(sameSubj && (a.group===b.group || normTxt(a.teacher)===normTxt(b.teacher) || !a.teacher || !b.teacher)) continue;
+      const [x,y] = toMin(a.start)<=toMin(b.start) ? [a,b] : [b,a];
+      CONFLICTS.push({room:a.room, day:a.day, a:x, b:y, from:Math.max(toMin(a.start),toMin(b.start)), to:Math.min(toMin(a.end),toMin(b.end))});
+    }
+  });
+  CONFLICTS.sort((p,q)=> DAYS.indexOf(p.day)-DAYS.indexOf(q.day) || p.from-q.from || p.room.localeCompare(q.room));
+})();
+function conflictsAt(room, day, a, b){ return CONFLICTS.filter(c=>c.room===room && c.day===day && c.from<b && a<c.to); }
+
+// stats
+document.getElementById('stats').innerHTML = `
+  <div class="stat"><b>${GROUPS.length}</b><span>Groupes</span></div>
+  <div class="stat"><b>${ROOMS.length}</b><span>Salles</span></div>
+  <div class="stat"><b>${SESSIONS.length}</b><span>Séances</span></div>
+  <div class="stat warn"><b>${CONFLICTS.length}</b><span>Conflits de salle</span></div>
+`;
+
+// ---- Tabs ----
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t=>t.addEventListener('click', ()=>{
+  tabs.forEach(x=>x.setAttribute('aria-selected','false'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  t.setAttribute('aria-selected','true');
+  document.getElementById(t.getAttribute('aria-controls')).classList.add('active');
+}));
+
+// ---- Room availability ----
+const dayBtnsWrap = document.getElementById('room-daybtns');
+let selDay = DAYS[0];
+DAYS.forEach(d=>{
+  const b = document.createElement('button');
+  b.className='daybtn'; b.dataset.day=d; b.textContent=d.slice(0,3); b.setAttribute('aria-pressed', d===selDay);
+  b.addEventListener('click', ()=>{ selDay=d; document.querySelectorAll('.daybtn').forEach(x=>x.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true'); renderRooms(); });
+  dayBtnsWrap.appendChild(b);
+});
+
+const fromSel = document.getElementById('room-from'), toSel = document.getElementById('room-to');
+function hhmm(m){ return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
+for(let m=8*60; m<=19*60; m+=15){
+  if(m<19*60) fromSel.add(new Option(hhmm(m), m, false, m===10*60));
+  if(m>8*60) toSel.add(new Option(hhmm(m), m, false, m===11*60+30));
+}
+function bldgOf(r){
+  const u=r.toUpperCase();
+  if(u.startsWith('AMPHI')) return 'Amphithéâtres';
+  if(/^SE\d/.test(u)) return 'Bloc SE';
+  if(/^ME\d/.test(u)) return 'Bloc ME';
+  if(/^NB\d/.test(u)) return 'Bloc NB';
+  if(/^G\s?\d|^G[IV]+$/.test(u)) return 'Bloc G';
+  if(/^S\.?\d/.test(u)) return 'Salles S';
+  if(/INF|CISCO|LAB|LINEDATA/.test(u)) return 'Informatique & labos';
+  return 'Autres salles';
+}
+const BLDGS = [...new Set(ROOMS.map(bldgOf))].sort();
+const bldgSel = document.getElementById('room-bldg');
+bldgSel.add(new Option('Tous', ''));
+BLDGS.forEach(b=>bldgSel.add(new Option(b,b)));
+[fromSel,toSel,bldgSel].forEach(e=>e.addEventListener('change', renderRooms));
+document.getElementById('room-freeonly').addEventListener('change', renderRooms);
+document.getElementById('room-search').addEventListener('input', renderRooms);
+document.getElementById('room-now').addEventListener('click', ()=>{
+  const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Tunis'}));
+  const d = ["Dimanche",...DAYS][now.getDay()];
+  if(DAYS.includes(d)) selDay = d;
+  let m = Math.floor((now.getHours()*60+now.getMinutes())/15)*15;
+  m = Math.min(Math.max(m, 8*60), 18*60+45);
+  fromSel.value = m; toSel.value = Math.min(m+90, 19*60);
+  document.querySelectorAll('.daybtn').forEach(x=>x.setAttribute('aria-pressed', String(x.dataset.day===selDay)));
+  renderRooms();
+});
+
+function renderRooms(){
+  let a = Number(fromSel.value), b = Number(toSel.value);
+  if(b<=a){ b = a+15; toSel.value = b; }
+  const q = document.getElementById('room-search').value.trim().toLowerCase();
+  const bl = bldgSel.value, freeOnly = document.getElementById('room-freeonly').checked;
+  const grid = document.getElementById('roomgrid');
+  grid.innerHTML='';
+  const rooms = ROOMS.filter(r=>r.toLowerCase().includes(q) && (!bl || bldgOf(r)===bl));
+  const daySess = ROOM_SESSIONS.filter(s=>s.day===selDay);
+  const res = rooms.map(room=>{
+    const mine = daySess.filter(s=>s.room===room);
+    const hits = mine.filter(s=>toMin(s.start)<b && a<toMin(s.end)).sort((x,y)=>toMin(x.start)-toMin(y.start));
+    const next = mine.filter(s=>toMin(s.start)>=b).sort((x,y)=>toMin(x.start)-toMin(y.start))[0];
+    return {room, hits, next};
+  });
+  const nFree = res.filter(r=>!r.hits.length).length;
+  document.getElementById('room-summary').innerHTML = `<b>${nFree}</b> salle${nFree>1?'s':''} libre${nFree>1?'s':''} sur <b>${res.length}</b> — ${selDay}, ${hhmm(a)} → ${hhmm(b)}`;
+  const shown = freeOnly ? res.filter(r=>!r.hits.length) : res;
+  if(!shown.length){ grid.innerHTML = '<div class="empty">Aucune salle libre ne correspond à ce créneau et à ces filtres.</div>'; return; }
+  const byB = {};
+  shown.forEach(r=>{ (byB[bldgOf(r.room)] ||= []).push(r); });
+  Object.keys(byB).sort().forEach(bn=>{
+    const h = document.createElement('div'); h.className='bldg'; h.style.gridColumn='1/-1';
+    h.innerHTML = `${bn} <span>${byB[bn].filter(r=>!r.hits.length).length}/${byB[bn].length}</span>`;
+    grid.appendChild(h);
+    byB[bn].forEach(({room,hits,next})=>{
+      const card = document.createElement('div');
+      card.className = 'roomcard ' + (hits.length ? 'busy':'free');
+      if(hits.length){
+        const det = hits.map(h=>`${h.start}–${h.end} · ${h.group} · ${h.subject}`).join('<br>');
+        const clash = conflictsAt(room, selDay, a, b).length ? '<span class="flag">Double réservation</span>' : '';
+        card.innerHTML = `<span class="roomname">${room}</span><span class="roomstatus">Occupée</span>${clash}<span class="roomdetail">${det}</span>`;
+      } else {
+        card.innerHTML = `<span class="roomname">${room}</span><span class="roomstatus">Libre</span><span class="roomdetail">${next? 'jusqu’à '+next.start : 'jusqu’à la fin de journée'}</span>`;
+      }
+      grid.appendChild(card);
+    });
+  });
+}
+
+// ---- Group availability ----
+const CYCLES = [...new Set(SESSIONS.map(s=>s.cycle))].sort();
+const cycleSel = document.getElementById('cycle-select');
+CYCLES.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; cycleSel.appendChild(o); });
+const groupSel = document.getElementById('group-select');
+function refreshGroupOptions(){
+  const c = cycleSel.value;
+  const groups = [...new Set(SESSIONS.filter(s=>s.cycle===c).map(s=>s.group))].sort((a,b)=>a.localeCompare(b));
+  groupSel.innerHTML='';
+  groups.forEach(g=>{ const o=document.createElement('option'); o.value=g; o.textContent=g; groupSel.appendChild(o); });
+}
+cycleSel.addEventListener('change', ()=>{ refreshGroupOptions(); renderWeek(); });
+groupSel.addEventListener('change', renderWeek);
+
+function renderWeek(){
+  const g = groupSel.value;
+  const wg = document.getElementById('weekgrid');
+  wg.innerHTML='';
+  wg.appendChild(el('div','wcell head',''));
+  DAYS.forEach(d=> wg.appendChild(el('div','wcell head',d)));
+
+  const startMin = 8*60, endMin = 18*60, step=30;
+  const mySessions = SESSIONS.filter(s=>s.group===g);
+
+  for(let m=startMin; m<endMin; m+=step){
+    const h=String(Math.floor(m/60)).padStart(2,'0'), mm=String(m%60).padStart(2,'0');
+    wg.appendChild(el('div','wcell time', (mm==='00'? `${h}:00`:'')));
+    DAYS.forEach(d=>{
+      const cell = el('div','wcell daycol','');
+      const starting = mySessions.filter(s=> s.day===d && toMin(s.start)>=m && toMin(s.start)<m+step);
+      starting.forEach(s=>{
+        const dur = toMin(s.end)-toMin(s.start);
+        const b = document.createElement('div');
+        b.className='block';
+        b.style.minHeight = Math.max(18, dur/2) + 'px';
+        b.innerHTML = `<b>${s.subject}</b><span class="rm">${s.room||'—'} · ${s.start}–${s.end}</span>`;
+        cell.appendChild(b);
+      });
+      wg.appendChild(cell);
+    });
+  }
+}
+function el(tag,cls,text){ const e=document.createElement(tag); e.className=cls; e.textContent=text; return e; }
+
+// ---- Full table ----
+function renderTable(){
+  const q = document.getElementById('table-search').value.trim().toLowerCase();
+  const body = document.getElementById('tablebody');
+  body.innerHTML='';
+  const rows = SESSIONS.filter(s=>{
+    if(!q) return true;
+    return [s.group,s.room,s.subject,s.teacher,s.day,s.cycle].join(' ').toLowerCase().includes(q);
+  }).sort((a,b)=> DAYS.indexOf(a.day)-DAYS.indexOf(b.day) || toMin(a.start)-toMin(b.start) || a.group.localeCompare(b.group));
+  if(rows.length===0){ body.innerHTML='<tr><td colspan="8" class="empty">Aucun résultat.</td></tr>'; return; }
+  const frag = document.createDocumentFragment();
+  rows.forEach(s=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${s.cycle}</td><td>${s.group}</td><td>${s.day}</td><td class="mono">${s.start}–${s.end}</td><td class="room">${s.room||'—'}</td><td>${s.subject}</td><td>${s.type||''}</td><td>${s.teacher||''}</td>`;
+    frag.appendChild(tr);
+  });
+  body.appendChild(frag);
+}
+document.getElementById('table-search').addEventListener('input', renderTable);
+
+// ---- Conflicts table ----
+document.getElementById('conf-count').textContent = `(${CONFLICTS.length})`;
+const confDay = document.getElementById('conf-day');
+confDay.add(new Option('Tous',''));
+DAYS.forEach(d=>confDay.add(new Option(d,d)));
+function renderConf(){
+  const d = confDay.value, q = document.getElementById('conf-search').value.trim().toLowerCase();
+  const body = document.getElementById('confbody'); body.innerHTML='';
+  const L = CONFLICTS.filter(c=>(!d||c.day===d) && (!q || [c.room,c.a.group,c.b.group,c.a.subject,c.b.subject].join(' ').toLowerCase().includes(q)));
+  if(!L.length){ body.innerHTML='<tr><td colspan="5" class="empty">Aucun conflit pour ces filtres.</td></tr>'; return; }
+  const cell = s => `${s.start}–${s.end} · ${s.group} · ${s.subject}`;
+  L.forEach(c=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${c.day}</td><td class="room">${c.room}</td><td class="mono clash">${hhmm(c.from)}–${hhmm(c.to)}</td><td>${cell(c.a)}</td><td>${cell(c.b)}</td>`;
+    body.appendChild(tr);
+  });
+}
+confDay.addEventListener('change', renderConf);
+document.getElementById('conf-search').addEventListener('input', renderConf);
+renderConf();
+
+// init
+refreshGroupOptions();
+renderRooms();
+renderWeek();
+renderTable();
+</script>
