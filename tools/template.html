@@ -2,38 +2,45 @@
 <style>
 :root{
   --warn:#a3261c; --warn-bg:#fbe3e0;
-  --bg:#f2f4f7; --surface:#ffffff; --surface-2:#e9edf3; --ink:#141922; --muted:#5c6472;
-  --line:#d7dce4; --accent:#2f5d8a; --accent-ink:#ffffff; --free:#2f8a5f; --free-bg:#e5f4ec;
-  --busy:#c4622a; --busy-bg:#fbe9de; --focus:#2f5d8a;
+  --bg:#0d0b14; --surface:#171321; --surface-2:#211b2d; --ink:#f0ebf7; --muted:#aaa1ba;
+  --line:#352b43; --accent:#b46cff; --accent-ink:#160d20; --free:#5fbf8d; --free-bg:#12261c;
+  --busy:#e08a52; --busy-bg:#2b1c13; --focus:#b46cff;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0f1319; --surface:#171d26; --surface-2:#1f2733; --ink:#e7ebf1; --muted:#8b93a3;
-    --line:#2a3341; --accent:#7fb0e0; --accent-ink:#0f1319; --free:#5fbf8d; --free-bg:#12261c;
-    --busy:#e08a52; --busy-bg:#2b1c13; --focus:#7fb0e0; --warn:#ff8a7a; --warn-bg:#3a1714;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0f1319; --surface:#171d26; --surface-2:#1f2733; --ink:#e7ebf1; --muted:#8b93a3;
-  --line:#2a3341; --accent:#7fb0e0; --accent-ink:#0f1319; --free:#5fbf8d; --free-bg:#12261c;
-  --busy:#e08a52; --busy-bg:#2b1c13; --focus:#7fb0e0; --warn:#ff8a7a; --warn-bg:#3a1714;
+:root[data-theme="light"]{
+  --bg:#f4f1f9; --surface:#ffffff; --surface-2:#ece8f3; --ink:#171321; --muted:#665f73;
+  --line:#ddd7e7; --accent:#7a35d4; --accent-ink:#ffffff; --free:#2f8a5f; --free-bg:#e5f4ec;
+  --busy:#c4622a; --busy-bg:#fbe9de; --focus:#7a35d4;
 }
 *{box-sizing:border-box}
 body{
   background:var(--bg); color:var(--ink); margin:0;
   font-family:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
-  padding-inline:16px; padding-block:20px 40px;
+  padding-inline:16px; padding-block:20px 40px; min-height:100vh;
 }
-.wrap{max-width:1100px;margin:0 auto}
+.wrap{max-width:1100px;margin:0 auto; position:relative}
+.wrap::before{content:'0101 0011 0100 1101 0010 0110'; position:fixed; z-index:-1; inset:12px 0 auto; color:#b46cff; opacity:.06; font:600 12px/2 'IBM Plex Mono',monospace; letter-spacing:.18em; overflow:hidden; white-space:nowrap; pointer-events:none}
+.brandbar{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  background:#160d20; color:#f7f0ff; border:1px solid #4c2870; border-radius:14px;
+  padding:12px 16px; margin-bottom:24px; box-shadow:0 10px 28px rgba(74,25,125,.16);
+}
+.brandmark{display:flex; align-items:center; gap:12px; min-width:0}
+.brandmonogram{width:52px; height:52px; flex:none; display:grid; place-items:center; border-radius:10px; border:1px solid #8e4de2; color:#d8b7f5; background:#241331; font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:700; letter-spacing:.08em; box-shadow:0 0 0 3px rgba(180,108,255,.14)}
+.brandcopy{display:flex; flex-direction:column; gap:2px; min-width:0}
+.brandcopy strong{font-size:15px; letter-spacing:.02em; white-space:nowrap}
+.brandcopy span{color:#c6a9e4; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.brandpulse{display:flex; align-items:center; gap:7px; color:#d6b8f2; font-size:11px; text-transform:uppercase; letter-spacing:.08em; white-space:nowrap}
+.brandpulse i{width:8px; height:8px; display:inline-block; border-radius:50%; background:#b46cff; box-shadow:0 0 12px #b46cff}
 h1{
   font-family:'IBM Plex Sans',sans-serif; font-weight:700; font-size:clamp(22px,4vw,30px);
-  margin:0 0 4px; letter-spacing:-0.01em; text-wrap:balance;
+  margin:0 0 4px; letter-spacing:-0.01em; text-wrap:balance; color:var(--ink);
 }
+h1::after{content:''; display:block; width:56px; height:3px; margin-top:10px; background:var(--accent); border-radius:2px}
 .sub{color:var(--muted); font-size:14px; margin:0 0 18px; max-width:60ch}
 .mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
 .stats{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px}
 .stat{
-  background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  background:var(--surface); border:1px solid var(--line); border-top:2px solid var(--accent); border-radius:8px;
   padding:8px 14px; display:flex; flex-direction:column; gap:2px; min-width:96px;
 }
 .stat b{font-size:20px; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums}
@@ -52,6 +59,7 @@ h1{
   display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:16px;
   background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px;
 }
+.controls::before{content:'SECURINETS // LIVE DATA'; flex-basis:100%; color:var(--accent); font:600 10px 'IBM Plex Mono',monospace; letter-spacing:.12em}
 .field{display:flex; flex-direction:column; gap:5px}
 .field label{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600}
 select, input[type="text"]{
@@ -134,10 +142,29 @@ td.clash{color:var(--warn);font-weight:600}
 #panel-conf td:nth-child(4),#panel-conf td:nth-child(5){min-width:260px}
 .note{font-size:12px; color:var(--muted); margin-top:18px; line-height:1.5}
 .empty{color:var(--muted); font-size:13px; padding:20px; text-align:center}
+@media (max-width:600px){
+  body{padding-inline:10px; padding-block:10px 28px}
+  .brandbar{padding:10px 12px; margin-bottom:20px}
+  .brandpulse{font-size:10px; letter-spacing:.04em}
+  .brandmonogram{width:44px; height:44px}
+  .brandcopy span{display:none}
+  .controls::before{margin-bottom:2px}
+}
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 
 <div class="wrap">
+  <header class="brandbar">
+    <div class="brandmark">
+      <div class="brandmonogram" aria-hidden="true">FST</div>
+      <div class="brandcopy">
+        <strong>SecuriNets FST</strong>
+        <span>Campus schedule intelligence</span>
+      </div>
+    </div>
+    <div class="brandpulse"><i aria-hidden="true"></i> S1 / 2026–2027</div>
+  </header>
+
   <h1>Salles libres &amp; groupes — FST</h1>
   <p class="sub">Disponibilité des salles et emplois du temps des groupes, à partir des emplois du temps S1 publiés par la faculté (Licence 1–3, Mastères 1–2, Ingénieur, Cycle préparatoire), A.U. 2026-2027. Choisissez un jour et un créneau pour voir les salles libres pendant toute la plage.</p>
 
