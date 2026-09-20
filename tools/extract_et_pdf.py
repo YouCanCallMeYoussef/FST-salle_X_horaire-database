@@ -74,8 +74,10 @@ def extract_pdf(path):
             cand_end = [w for w in words if TIME_RE.match(w['text']) and (bottom-14) <= w['top'] <= (bottom+4) and r['x0']-6 <= w['x0'] <= r['x0']+60]
             start_t = cand_start[0]['text'] if cand_start else None
             end_t = cand_end[0]['text'] if cand_end else None
-            top_bound = cand_start[0]['top']+8 if cand_start else top+6
-            bot_bound = cand_end[0]['top']-2 if cand_end else bottom-6
+            # time labels are skipped via TIME_RE below, so keep generous bounds:
+            # subject text can sit level with the start-time label
+            top_bound = top - 2
+            bot_bound = bottom + 2
 
             inner = [w for w in words if r['x0']-2 <= w['x0'] and w['x1'] <= r['x1']+2
                      and top_bound <= w['top'] <= bot_bound]
@@ -100,6 +102,7 @@ def extract_pdf(path):
             def clean(lst):
                 s = " ".join(lst)
                 s = re.sub(r'\s+([,.;:/])', r'\1', s)
+                s = re.sub(r'\s+\)', ')', s)
                 s = re.sub(r'\s+', ' ', s).strip()
                 return s
 

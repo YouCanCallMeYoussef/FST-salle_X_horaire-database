@@ -88,7 +88,9 @@ select:focus-visible, input:focus-visible{outline:2px solid var(--focus); outlin
 .dot.free{background:var(--free)}
 .dot.busy{background:var(--busy)}
 
+.weekwrap{overflow-x:auto}
 .weekgrid{
+  min-width:660px;
   display:grid; grid-template-columns: 56px repeat(6,1fr); gap:1px; background:var(--line);
   border:1px solid var(--line); border-radius:10px; overflow:hidden; font-size:11.5px;
 }
@@ -137,7 +139,7 @@ td.clash{color:var(--warn);font-weight:600}
 
 <div class="wrap">
   <h1>Salles libres &amp; groupes — FST</h1>
-  <p class="sub">Disponibilité des salles et emplois du temps des groupes, à partir des emplois du temps S1 publiés par la faculté (Licence 1–3, Ingénieur, Cycle préparatoire), A.U. 2026-2027. Choisissez un jour et un créneau pour voir les salles libres pendant toute la plage.</p>
+  <p class="sub">Disponibilité des salles et emplois du temps des groupes, à partir des emplois du temps S1 publiés par la faculté (Licence 1–3, Mastères 1–2, Ingénieur, Cycle préparatoire), A.U. 2026-2027. Choisissez un jour et un créneau pour voir les salles libres pendant toute la plage.</p>
 
   <div class="stats" id="stats"></div>
 
@@ -188,7 +190,7 @@ td.clash{color:var(--warn);font-weight:600}
         <select id="group-select" style="min-width:260px"></select>
       </div>
     </div>
-    <div class="weekgrid" id="weekgrid"></div>
+    <div class="weekwrap"><div class="weekgrid" id="weekgrid"></div></div>
   </section>
 
   <section class="panel" id="panel-table" role="tabpanel" aria-labelledby="tab-table">
@@ -207,7 +209,7 @@ td.clash{color:var(--warn);font-weight:600}
   </section>
 
   <section class="panel" id="panel-conf" role="tabpanel" aria-labelledby="tab-conf">
-    <p class="conf-intro">Salles réservées à deux groupes différents sur des créneaux qui se chevauchent, d'après les emplois du temps publiés. Ne sont pas comptés : les cours partagés (même matière, même enseignant, plusieurs groupes en amphi) et deux séances d'un même groupe au même créneau (matières optionnelles ou semaines alternées). Les salles S.1, S.7 et S.8 du cycle Ingénieur Chimie (ICAI) sont traitées comme des salles distinctes de celles des licences portant le même nom (« Ing. Chimie »). Une même étiquette peut encore désigner deux salles différentes ailleurs : à vérifier auprès de la scolarité.</p>
+    <p class="conf-intro">Salles réservées à deux groupes différents sur des créneaux qui se chevauchent, d'après les emplois du temps publiés. Ne sont pas comptés : les cours partagés (même matière, même enseignant, plusieurs groupes en amphi) et deux séances d'un même groupe au même créneau (matières optionnelles ou semaines alternées). Une même étiquette de salle peut désigner deux salles différentes selon les départements : à vérifier auprès de la scolarité.</p>
     <div class="controls">
       <div class="field">
         <label for="conf-day">Jour</label>
@@ -226,7 +228,7 @@ td.clash{color:var(--warn);font-weight:600}
     </div>
   </section>
 
-  <p class="note">Source : emplois du temps du 1er semestre, A.U. 2026-2027 uniquement (Licence 1, 2, 3, Ingénieur, Cycle préparatoire : BG1-A, BG2, PC1-A, PC2-A/B, MPI1 A–E, MI2 A/B/C, PI2 A/B), publiés par la Faculté des Sciences de Tunis (fst.rnu.tn). __GROUP_COUNT__ groupes, __SESSION_COUNT__ séances, __ROOM_COUNT__ salles identifiées. « Libre » signifie qu'aucune séance de ces emplois du temps n'occupe la salle : examens, réservations et autres départements ne sont pas couverts. Pour le cycle préparatoire, la salle indiquée est celle de la section ; les TP (physique, chimie, biologie, géologie, programmation), qui ont lieu en laboratoire non précisé, ne bloquent pas cette salle.</p>
+  <p class="note">Source : emplois du temps du 1er semestre, A.U. 2026-2027 uniquement (Licence 1, 2, 3, Mastère 1, Mastère 2, Ingénieur, Cycle préparatoire : BG1-A, BG2, PC1-A, PC2-A/B, MPI1 A–E, MI2 A/B/C, PI2 A/B) — versions publiées le 19/09/2026 pour les licences, mastères et ingénieurs, publiés par la Faculté des Sciences de Tunis (fst.rnu.tn). __GROUP_COUNT__ groupes, __SESSION_COUNT__ séances, __ROOM_COUNT__ salles identifiées. « Libre » signifie qu'aucune séance de ces emplois du temps n'occupe la salle : examens, réservations et autres départements ne sont pas couverts. Pour le cycle préparatoire, la salle indiquée est celle de la section ; les TP (physique, chimie, biologie, géologie, programmation), qui ont lieu en laboratoire non précisé, ne bloquent pas cette salle.</p>
 </div>
 
 <script>
@@ -321,10 +323,12 @@ document.getElementById('room-freeonly').addEventListener('change', renderRooms)
 document.getElementById('room-search').addEventListener('input', renderRooms);
 document.getElementById('room-now').addEventListener('click', ()=>{
   const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Tunis'}));
-  const d = ["Dimanche",...DAYS][now.getDay()];
-  if(DAYS.includes(d)) selDay = d;
+  let di = now.getDay() - 1;               // 0 = Lundi … 5 = Samedi, -1 = dimanche
   let m = Math.floor((now.getHours()*60+now.getMinutes())/15)*15;
-  m = Math.min(Math.max(m, 8*60), 18*60+45);
+  // hors horaires (avant 8h, après 17h30) ou dimanche : aller au prochain jour de cours, à 8h
+  if(di < 0 || di > 5 || m > 17*60+30){ di = (di < 0 || di > 5) ? 0 : (di+1)%6; m = 8*60; }
+  else if(m < 8*60){ m = 8*60; }
+  selDay = DAYS[di];
   fromSel.value = m; toSel.value = Math.min(m+90, 19*60);
   document.querySelectorAll('.daybtn').forEach(x=>x.setAttribute('aria-pressed', String(x.dataset.day===selDay)));
   renderRooms();
