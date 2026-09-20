@@ -45,12 +45,14 @@ Pour un nouveau semestre : `python3 tools/extract_et_pdf.py ET-XXX.pdf > raw.jso
 
 1. Pousser ce dossier à la racine d'un dépôt GitHub (branche `main`).
 2. *Settings → Pages → Build and deployment* : **Deploy from a branch**, branche `main`, dossier `/ (root)`.
-3. Domaine personnalisé : dans *Settings → Pages → Custom domain*, saisir le sous-domaine (ex. `salles.securinetsfst.org`) — GitHub crée le fichier `CNAME`. Chez le registrar/DNS, ajouter un enregistrement **CNAME** `salles` → `<utilisateur-ou-org>.github.io`. Puis cocher **Enforce HTTPS** une fois le certificat émis.
+3. Domaine personnalisé : dans *Settings → Pages → Custom domain*, saisir `sallefst.securinetsfst.org` — GitHub crée le fichier `CNAME`. Chez le DNS (Cloudflare), ajouter un enregistrement **CNAME** `sallefst` → `youcancallmeyoussef.github.io`, en « DNS only » (nuage gris) jusqu'à l'émission du certificat. Puis cocher **Enforce HTTPS**. Si le proxy Cloudflare est activé ensuite, régler le mode SSL/TLS sur **Full** (pas Flexible).
 
 ## Limites
 
 - « Libre » = aucune séance de ces emplois du temps dans la salle : examens, réservations et autres départements ne sont pas couverts.
 - Cycle préparatoire : la salle indiquée est celle de la section ; les TP (physique, chimie, biologie, géologie, programmation) ont lieu en laboratoire non précisé et ne bloquent pas la salle.
 - Les salles `S.1`, `S.7`, `S.8` du cycle Ingénieur Chimie (ICAI) sont renommées `S.x (Ing. Chimie)` : ce sont a priori des salles distinctes de celles des licences portant le même nom. Les autres conflits restants sont à confirmer auprès de la scolarité.
+
+Site en ligne : https://sallefst.securinetsfst.org
 
 Source : emplois du temps publiés sur fst.rnu.tn. Projet SecuriNets FST.
